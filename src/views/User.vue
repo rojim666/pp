@@ -169,14 +169,14 @@
                 </span>
               </td>
               <td class="balance-col">¥{{ user.balance.toFixed(2) }}</td>
-              <td class="number-col">{{ user.chargeCount }}</td>
-              <td class="number-col">{{ user.totalEnergy.toFixed(1) }}</td>
+              <td class="number-col">{{ user.totalChargingCount }}</td>
+              <td class="number-col">{{ user.totalChargingEnergy.toFixed(1) }}</td>
               <td>
                 <span class="status-badge" :class="'status-' + user.status">
                   {{ getStatusText(user.status) }}
                 </span>
               </td>
-              <td class="date-col">{{ user.registerDate }}</td>
+              <td class="date-col">{{ user.createdAt }}</td>
               <td class="actions-col">
                 <div class="action-buttons">
                   <button class="btn-icon btn-view" @click="viewUser(user)" title="查看">
@@ -336,7 +336,7 @@
               </div>
               <div class="info-item">
                 <span class="info-label">注册时间</span>
-                <span class="info-value">{{ selectedUser?.registerDate }}</span>
+                <span class="info-value">{{ selectedUser?.createdAt }}</span>
               </div>
             </div>
           </div>
@@ -351,15 +351,15 @@
               </div>
               <div class="info-item">
                 <span class="info-label">充电次数</span>
-                <span class="info-value">{{ selectedUser?.chargeCount }} 次</span>
+                <span class="info-value">{{ selectedUser?.totalChargingCount }} 次</span>
               </div>
               <div class="info-item">
                 <span class="info-label">累计电量</span>
-                <span class="info-value">{{ selectedUser?.totalEnergy.toFixed(1) }} kWh</span>
+                <span class="info-value">{{ selectedUser?.totalChargingEnergy.toFixed(1) }} kWh</span>
               </div>
               <div class="info-item">
                 <span class="info-label">累计消费</span>
-                <span class="info-value">¥{{ selectedUser?.totalSpent.toFixed(2) }}</span>
+                <span class="info-value">¥{{ selectedUser?.totalChargingFee.toFixed(2) }}</span>
               </div>
             </div>
           </div>
@@ -393,6 +393,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { userAPI, authAPI } from '../api'
 
 // 状态数据
 const users = ref([])
@@ -422,7 +423,7 @@ const stats = computed(() => {
   const total = users.value.length
   const active = users.value.filter(u => u.status === 'active').length
   const charging = users.value.filter(u => u.status === 'charging').length
-  const totalEnergy = users.value.reduce((sum, u) => sum + u.totalEnergy, 0)
+  const totalEnergy = users.value.reduce((sum, u) => sum + (u.totalChargingEnergy || 0), 0)
   
   return { total, active, charging, totalEnergy: totalEnergy.toFixed(1) }
 })
@@ -492,108 +493,18 @@ const getRandomColor = () => {
 const loadUsers = async () => {
   try {
     loading.value = true
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const res = await userAPI.list({
+      page: 1,
+      size: 100
+    })
     
-    users.value = [
-      {
-        id: 1,
-        username: '张三',
-        phone: '13800138001',
-        role: 'vip',
-        balance: 1580.50,
-        chargeCount: 45,
-        totalEnergy: 680.5,
-        totalSpent: 1020.75,
-        status: 'active',
-        registerDate: '2024-01-15',
-        avatarColor: getRandomColor(),
-        recentCharges: [
-          { id: 1, station: '停车场A区-01号桩', time: '2025-01-20 14:30', energy: 25.5, cost: 38.25 },
-          { id: 2, station: '停车场B区-02号桩', time: '2025-01-18 09:15', energy: 30.2, cost: 45.30 },
-          { id: 3, station: '地下车库-01号桩', time: '2025-01-15 16:45', energy: 22.8, cost: 34.20 },
-        ]
-      },
-      {
-        id: 2,
-        username: '李四',
-        phone: '13800138002',
-        role: 'user',
-        balance: 256.80,
-        chargeCount: 28,
-        totalEnergy: 420.3,
-        totalSpent: 630.45,
-        status: 'charging',
-        registerDate: '2024-02-20',
-        avatarColor: getRandomColor(),
-        recentCharges: [
-          { id: 1, station: '停车场A区-02号桩', time: '2025-01-21 10:20', energy: 18.5, cost: 27.75 },
-          { id: 2, station: '停车场B区-01号桩', time: '2025-01-19 13:40', energy: 24.0, cost: 36.00 },
-        ]
-      },
-      {
-        id: 3,
-        username: '王五',
-        phone: '13800138003',
-        role: 'user',
-        balance: 89.20,
-        chargeCount: 15,
-        totalEnergy: 200.5,
-        totalSpent: 300.75,
-        status: 'active',
-        registerDate: '2024-03-10',
-        avatarColor: getRandomColor(),
-        recentCharges: [
-          { id: 1, station: '地下车库-02号桩', time: '2025-01-19 08:30', energy: 15.2, cost: 22.80 },
-        ]
-      },
-      {
-        id: 4,
-        username: '赵六',
-        phone: '13800138004',
-        role: 'admin',
-        balance: 2500.00,
-        chargeCount: 0,
-        totalEnergy: 0,
-        totalSpent: 0,
-        status: 'active',
-        registerDate: '2023-12-01',
-        avatarColor: getRandomColor(),
-        recentCharges: []
-      },
-      {
-        id: 5,
-        username: '孙七',
-        phone: '13800138005',
-        role: 'user',
-        balance: 0,
-        chargeCount: 8,
-        totalEnergy: 95.2,
-        totalSpent: 142.80,
-        status: 'disabled',
-        registerDate: '2024-04-15',
-        avatarColor: getRandomColor(),
-        recentCharges: []
-      },
-      {
-        id: 6,
-        username: '周八',
-        phone: '13800138006',
-        role: 'vip',
-        balance: 3250.50,
-        chargeCount: 120,
-        totalEnergy: 1850.8,
-        totalSpent: 2776.20,
-        status: 'active',
-        registerDate: '2023-10-20',
-        avatarColor: getRandomColor(),
-        recentCharges: [
-          { id: 1, station: '停车场A区-01号桩', time: '2025-01-21 11:00', energy: 32.5, cost: 48.75 },
-          { id: 2, station: '停车场A区-02号桩', time: '2025-01-20 15:20', energy: 28.0, cost: 42.00 },
-          { id: 3, station: '停车场B区-01号桩', time: '2025-01-19 09:30', energy: 35.2, cost: 52.80 },
-        ]
-      },
-    ]
+    users.value = res.records.map(user => ({
+      ...user,
+      avatarColor: getRandomColor(),
+      recentCharges: [] // 暂无最近充电记录接口
+    }))
+  } catch (error) {
+    console.error('获取用户列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -625,11 +536,18 @@ const toggleSelectAll = () => {
 }
 
 // 批量删除
-const batchDelete = () => {
+const batchDelete = async () => {
   if (!confirm(`确定要删除选中的 ${selectedIds.value.length} 个用户吗？`)) return
   
-  users.value = users.value.filter(u => !selectedIds.value.includes(u.id))
-  selectedIds.value = []
+  try {
+    await Promise.all(selectedIds.value.map(id => userAPI.delete(id)))
+    users.value = users.value.filter(u => !selectedIds.value.includes(u.id))
+    selectedIds.value = []
+  } catch (error) {
+    console.error('批量删除失败:', error)
+    alert('批量删除失败')
+    loadUsers()
+  }
 }
 
 // 显示添加对话框
@@ -662,14 +580,27 @@ const editUser = (user) => {
 }
 
 // 切换用户状态
-const toggleUserStatus = (user) => {
-  user.status = user.status === 'disabled' ? 'active' : 'disabled'
+const toggleUserStatus = async (user) => {
+  const newStatus = user.status === 'disabled' ? 'active' : 'disabled'
+  try {
+    await userAPI.update(user.id, { status: newStatus })
+    user.status = newStatus
+  } catch (error) {
+    console.error('更新状态失败:', error)
+    alert('更新状态失败')
+  }
 }
 
 // 删除用户
-const deleteUser = (user) => {
+const deleteUser = async (user) => {
   if (!confirm(`确定要删除用户"${user.username}"吗？`)) return
-  users.value = users.value.filter(u => u.id !== user.id)
+  try {
+    await userAPI.delete(user.id)
+    users.value = users.value.filter(u => u.id !== user.id)
+  } catch (error) {
+    console.error('删除失败:', error)
+    alert('删除失败')
+  }
 }
 
 // 关闭对话框
@@ -682,25 +613,27 @@ const closeDetailDialog = () => {
 }
 
 // 提交表单
-const submitForm = () => {
-  if (isEditing.value) {
-    const index = users.value.findIndex(u => u.id === formData.value.id)
-    if (index !== -1) {
-      users.value[index] = { ...users.value[index], ...formData.value }
+const submitForm = async () => {
+  try {
+    if (isEditing.value) {
+      await userAPI.update(formData.value.id, formData.value)
+      const index = users.value.findIndex(u => u.id === formData.value.id)
+      if (index !== -1) {
+        users.value[index] = { ...users.value[index], ...formData.value }
+      }
+    } else {
+      const res = await authAPI.register(formData.value)
+      users.value.unshift({
+        ...res,
+        avatarColor: getRandomColor(),
+        recentCharges: []
+      })
     }
-  } else {
-    users.value.unshift({
-      ...formData.value,
-      id: Date.now(),
-      chargeCount: 0,
-      totalEnergy: 0,
-      totalSpent: 0,
-      registerDate: new Date().toISOString().split('T')[0],
-      avatarColor: getRandomColor(),
-      recentCharges: []
-    })
+    closeDialog()
+  } catch (error) {
+    console.error('操作失败:', error)
+    alert('操作失败: ' + (error.message || '未知错误'))
   }
-  closeDialog()
 }
 
 // 组件挂载时加载数据

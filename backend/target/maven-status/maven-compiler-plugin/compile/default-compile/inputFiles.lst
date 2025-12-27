@@ -1,14 +1,11 @@
 E:\Code\pp\backend\src\main\java\com\charging\mapper\ChargingStationMapper.java
 E:\Code\pp\backend\src\main\java\com\charging\security\JwtAuthenticationFilter.java
 E:\Code\pp\backend\src\main\java\com\charging\mapper\TariffConfigMapper.java
-E:\Code\pp\backend\src\main\java\com\charging\dto\request\TariffRequest.java
 E:\Code\pp\backend\src\main\java\com\charging\dto\request\UserRequest.java
 E:\Code\pp\backend\src\main\java\com\charging\service\ChargingStationService.java
 E:\Code\pp\backend\src\main\java\com\charging\controller\ChargingStationController.java
-E:\Code\pp\backend\src\main\java\com\charging\entity\SystemLog.java
 E:\Code\pp\backend\src\main\java\com\charging\util\JwtUtil.java
 E:\Code\pp\backend\src\main\java\com\charging\common\exception\GlobalExceptionHandler.java
-E:\Code\pp\backend\src\main\java\com\charging\mapper\SystemLogMapper.java
 E:\Code\pp\backend\src\main\java\com\charging\config\MyBatisPlusMetaObjectHandler.java
 E:\Code\pp\backend\src\main\java\com\charging\mapper\ChargingRecordMapper.java
 E:\Code\pp\backend\src\main\java\com\charging\controller\DashboardController.java
@@ -31,7 +28,6 @@ E:\Code\pp\backend\src\main\java\com\charging\dto\request\LoginRequest.java
 E:\Code\pp\backend\src\main\java\com\charging\ChargingStationApplication.java
 E:\Code\pp\backend\src\main\java\com\charging\mapper\UserMapper.java
 E:\Code\pp\backend\src\main\java\com\charging\common\result\Result.java
-E:\Code\pp\backend\src\main\java\com\charging\config\MyBatisConfig.java
 E:\Code\pp\backend\src\main\java\com\charging\entity\User.java
 E:\Code\pp\backend\src\main\java\com\charging\entity\TariffConfig.java
 E:\Code\pp\backend\src\main\java\com\charging\controller\ChargingRecordController.java

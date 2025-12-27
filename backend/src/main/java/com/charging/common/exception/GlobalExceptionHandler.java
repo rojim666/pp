@@ -7,6 +7,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 
 import java.util.stream.Collectors;
 
@@ -48,6 +49,15 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining(", "));
         log.error("参数绑定失败: {}", message);
         return Result.error(400, message);
+    }
+
+    /**
+     * 请求方法不支持
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public Result<Void> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException e) {
+        log.error("请求方法不支持: {}", e.getMessage());
+        return Result.error(405, "请求方法不支持: " + e.getMethod());
     }
 
     /**
