@@ -23,6 +23,7 @@ public class MqttConfig implements MqttCallback {
     @Value("${mqtt.client-id}") private String clientId;
 
     private final ObjectMapper objectMapper;
+    private final com.charging.service.ChargingStationService stationService;  // Inject Service
     private MqttClient client;
 
     @PostConstruct
@@ -140,8 +141,12 @@ public class MqttConfig implements MqttCallback {
         log.info("Device Status Update [{}]: Status={} SOC={}% Volt={}V Amp={}A Power={}kW Energy={}kWh Temp={}C",
                 deviceId, frontendStatus, currentSoc, currentVoltage, currentCurrent, currentPower, chargeEnergy, temp);
         
-        // In a real app, you would push this `frontendStatus` and values to the frontend via WebSocket
-        // or save to DB.
+        // Update DB
+        try {
+            stationService.updateStatusByCode(deviceId, frontendStatus, currentVoltage, currentCurrent, currentPower, currentSoc, chargeEnergy, temp);
+        } catch (Exception e) {
+            log.error("Failed to update db status for device " + deviceId, e);
+        }
     }
 
     @Override
