@@ -1,0 +1,1 @@
+var E=(e=>(e.ONLINE="online",e.OFFLINE="offline",e.CHARGING="charging",e.MAINTENANCE="maintenance",e.ERROR="error",e))(E||{}),N=(e=>(e.CHARGING="charging",e.COMPLETED="completed",e.CANCELLED="cancelled",e.FAILED="failed",e))(N||{});export{E as C,N as a};

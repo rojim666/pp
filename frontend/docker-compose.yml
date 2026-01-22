@@ -1,0 +1,88 @@
+version: '3.8'
+
+services:
+  # MySQL 数据库服务
+  mysql:
+    image: mysql:8.0
+    container_name: charging-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${DB_NAME:-charging_station}
+      MYSQL_USER: ${DB_USER:-charging}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-charging123}
+    ports:
+      - "${DB_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ../backend/sql/schema-utf8.sql:/docker-entrypoint-initdb.d/01-schema.sql
+    networks:
+      - charging-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+    restart: unless-stopped
+    command: 
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --max_connections=1000
+
+  # 后端 Java 应用服务
+  backend:
+    build:
+      context: ..
+      dockerfile: backend/Dockerfile
+    container_name: charging-backend
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-charging_station}?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: ${DB_USER:-charging}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-charging123}
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-production}
+      JAVA_OPTS: ${JAVA_OPTS:- -Xmx1G -Xms512M}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - charging-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/ping"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
+  # 前端 Nginx 服务
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: charging-frontend
+    ports:
+      - "${FRONTEND_PORT:-8088}:80"
+      - "${FRONTEND_SSL_PORT:-443}:443"
+    environment:
+      NGINX_HOST: ${NGINX_HOST:-localhost}
+      NGINX_PORT: ${NGINX_PORT:-80}
+    depends_on:
+      - backend
+    networks:
+      - charging-network
+    restart: unless-stopped
+    volumes:
+      - ./dist:/usr/share/nginx/html:ro
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      timeout: 10s
+      retries: 5
+      interval: 30s
+
+volumes:
+  mysql-data:
+    driver: local
+
+networks:
+  charging-network:
+    driver: bridge
