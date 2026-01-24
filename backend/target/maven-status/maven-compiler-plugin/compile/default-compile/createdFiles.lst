@@ -17,6 +17,7 @@ com\charging\service\UserService.class
 com\charging\entity\User$UserBuilder.class
 com\charging\service\ChargingRecordService.class
 com\charging\dto\request\RecordRequest.class
+com\charging\config\MqttConfig.class
 com\charging\dto\response\StationResponse$StationResponseBuilder.class
 com\charging\entity\ChargingStation.class
 com\charging\controller\ChargingStationController.class
