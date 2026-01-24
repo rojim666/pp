@@ -1077,20 +1077,20 @@ const handleLogout = () => {
 }
 
 .icon-btn.active {
-  background: linear-gradient(135deg, #34C759, #30B74F);
-  color: white;
+  background: rgba(52, 199, 89, 0.15);
+  color: #34C759;
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(52, 199, 89, 0.4);
+  box-shadow: 0 4px 16px rgba(52, 199, 89, 0.25);
 }
 
 .icon-btn.active::before {
-  opacity: 1;
+  opacity: 0.1;
 }
 
 .icon-btn.active .icon,
 .icon-btn.active svg {
-  color: white !important;
-  fill: white !important;
+  color: #34C759 !important;
+  fill: #34C759 !important;
 }
 
 .badge {
