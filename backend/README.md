@@ -1,6 +1,6 @@
 # 充电桩管理系统后端
 
-基于 Spring Boot 3.1.5 + MyBatis-Plus 的充电桩管理系统后端服务。
+基于 Spring Boot 3.1.5 + MyBatis-Plus 的充电桩管理系统后端服务
 
 ## 技术栈
 
