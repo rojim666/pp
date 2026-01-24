@@ -33,7 +33,15 @@ public class TariffConfig {
 
     private BigDecimal serviceFee;
 
-    // private BigDecimal parkingFee; // 数据库暂无此字段
+    private BigDecimal parkingFee;
+
+    private Integer maxChargingHours;
+
+    private Integer freeParkingMinutes;
+
+    private BigDecimal minChargeFee;
+
+    private BigDecimal maxPower;
 
     private String peakHours;
 

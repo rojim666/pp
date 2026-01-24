@@ -362,10 +362,21 @@ const loadSettings = async () => {
         ...tariffConfig.value,
         ...res,
         // 确保数值类型正确
-        peakPrice: Number(res.peakPrice),
-        valleyPrice: Number(res.valleyPrice),
-        serviceFee: Number(res.serviceFee),
-        parkingFee: Number(res.parkingFee || 5.0)
+        id: res.id,
+        name: res.name || '默认费率配置',
+        peakPrice: Number(res.peakPrice) || 1.2,
+        valleyPrice: Number(res.valleyPrice) || 0.6,
+        normalPrice: Number(res.normalPrice) || 1.0,
+        serviceFee: Number(res.serviceFee) || 0.8,
+        peakHours: res.peakHours || '8:00-22:00',
+        valleyHours: res.valleyHours || '22:00-次日8:00',
+        // 保留前端特有的字段（这些字段不在数据库中）
+        parkingFee: Number(tariffConfig.value.parkingFee) || 5.0,
+        maxChargingHours: Number(tariffConfig.value.maxChargingHours) || 4,
+        freeParkingMinutes: Number(tariffConfig.value.freeParkingMinutes) || 15,
+        minChargeFee: Number(tariffConfig.value.minChargeFee) || 1.0,
+        maxPower: Number(tariffConfig.value.maxPower) || 120,
+        discounts: tariffConfig.value.discounts || []
       }
     }
   } catch (error) {
@@ -392,13 +403,33 @@ const saveSettings = async () => {
       return
     }
 
+    // 只发送后端支持的字段
+    const dataToSend = {
+      id: tariffConfig.value.id,
+      name: tariffConfig.value.name || '默认费率配置',
+      peakPrice: tariffConfig.value.peakPrice,
+      valleyPrice: tariffConfig.value.valleyPrice,
+      normalPrice: tariffConfig.value.normalPrice || 1.0,
+      serviceFee: tariffConfig.value.serviceFee,
+      peakHours: tariffConfig.value.peakHours || '8:00-22:00',
+      valleyHours: tariffConfig.value.valleyHours || '22:00-次日8:00',
+      isDefault: true,
+      effectiveDate: new Date().toISOString().split('T')[0],
+      description: tariffConfig.value.description || ''
+    }
+
     // 保存到后端
-    await tariffAPI.update(tariffConfig.value)
+    const res = await tariffAPI.update(dataToSend)
     
-    // 同时保存到本地作为缓存
-    localStorage.setItem('tariffConfig', JSON.stringify(tariffConfig.value))
-    
-    alert('保存成功！')
+    if (res) {
+      // 更新本地数据
+      tariffConfig.value.id = res.id
+      
+      // 同时保存到本地作为缓存
+      localStorage.setItem('tariffConfig', JSON.stringify(tariffConfig.value))
+      
+      alert('保存成功！')
+    }
   } catch (error) {
     console.error('保存失败:', error)
     alert('保存失败，请重试')
