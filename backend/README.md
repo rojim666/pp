@@ -83,7 +83,7 @@ spring:
   datasource:
     url: jdbc:mysql://localhost:3306/charging_station
     username: root
-    password: your_password
+    password: root
   data:
     redis:
       host: localhost
