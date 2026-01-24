@@ -133,6 +133,32 @@ public class ChargingStationService {
     }
 
     /**
+     * 根据设备编号更新充电桩状态（MQTT回调使用）
+     */
+    @Transactional
+    public void updateStatusByCode(String code, String status, Double voltage, Double current, Double power, Double soc, Double energy, Integer temperature) {
+        ChargingStation station = stationMapper.selectOne(new LambdaQueryWrapper<ChargingStation>()
+                .eq(ChargingStation::getCode, code));
+        
+        if (station != null) {
+            station.setStatus(status);
+            if (voltage != null) {
+                station.setVoltage(new java.math.BigDecimal(voltage));
+            }
+            if (current != null) {
+                station.setCurrent(new java.math.BigDecimal(current));
+            }
+            if (power != null) {
+                station.setPower(new java.math.BigDecimal(power));
+            }
+            if (temperature != null) {
+                station.setTemperature(new java.math.BigDecimal(temperature));
+            }
+            stationMapper.updateById(station);
+        }
+    }
+
+    /**
      * 转换为响应DTO
      */
     private StationResponse convertToResponse(ChargingStation station) {
