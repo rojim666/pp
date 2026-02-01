@@ -111,8 +111,8 @@ public class MqttConfig implements MqttCallback {
         try {
             @SuppressWarnings("unchecked")
             java.util.Map<String, Object> data = objectMapper.readValue(payload, java.util.Map.class);
+            log.info("📡 收到设备 [{}] 状态数据: {}", deviceId, payload);
             stationService.updateStatusFromMqtt(deviceId, data);
-            log.debug("Updated status for device: {}", deviceId);
         } catch (Exception e) {
             log.error("Failed to parse status payload from device: {}", deviceId, e);
         }

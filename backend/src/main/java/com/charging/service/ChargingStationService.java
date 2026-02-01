@@ -108,7 +108,7 @@ public class ChargingStationService {
     }
 
     /**
-     * 更新充电桩实时状态 (MQTT)
+     * 更新充电桩实时状态 (MQTT) - 如果设备不存在则自动创建
      */
     @Transactional
     public void updateStatusFromMqtt(String deviceCode, java.util.Map<String, Object> data) {
@@ -117,9 +117,23 @@ public class ChargingStationService {
                 .or()
                 .eq(ChargingStation::getSerialNumber, deviceCode)); // 尝试匹配编号或序列号
 
+        // 如果设备不存在，自动创建
         if (station == null) {
-            // System.out.println("未知设备: " + deviceCode);
-            return;
+            station = ChargingStation.builder()
+                    .code(deviceCode)
+                    .serialNumber(deviceCode)
+                    .name("充电桩-" + deviceCode.substring(Math.max(0, deviceCode.length() - 8))) // 使用MAC后8位
+                    .type("DC") // 默认直流桩
+                    .status("online")
+                    .location("未知位置")
+                    .manufacturer("未知")
+                    .model("ESP32-S3")
+                    .power(java.math.BigDecimal.ZERO)
+                    .voltage(java.math.BigDecimal.ZERO)
+                    .current(java.math.BigDecimal.ZERO)
+                    .build();
+            stationMapper.insert(station);
+            System.out.println("🆕 自动创建新充电桩: " + deviceCode);
         }
 
         // 解析数据
@@ -150,6 +164,7 @@ public class ChargingStationService {
         }
 
         stationMapper.updateById(station);
+        System.out.println("📊 更新充电桩状态: " + deviceCode + " | 功率:" + station.getPower() + "kW | 状态:" + station.getStatus());
     }
                 throw new BusinessException("充电桩编号已被使用");
             }
