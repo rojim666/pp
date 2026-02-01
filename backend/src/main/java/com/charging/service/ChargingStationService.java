@@ -98,6 +98,59 @@ public class ChargingStationService {
             if (stationMapper.selectCount(new LambdaQueryWrapper<ChargingStation>()
                     .eq(ChargingStation::getCode, request.getCode())
                     .ne(ChargingStation::getId, id)) > 0) {
+                throw new BusinessException("充电桩编号已存在");
+            }
+        }
+        
+        BeanUtils.copyProperties(request, station);
+        stationMapper.updateById(station);
+        return convertToResponse(station);
+    }
+
+    /**
+     * 更新充电桩实时状态 (MQTT)
+     */
+    @Transactional
+    public void updateStatusFromMqtt(String deviceCode, java.util.Map<String, Object> data) {
+        ChargingStation station = stationMapper.selectOne(new LambdaQueryWrapper<ChargingStation>()
+                .eq(ChargingStation::getCode, deviceCode)
+                .or()
+                .eq(ChargingStation::getSerialNumber, deviceCode)); // 尝试匹配编号或序列号
+
+        if (station == null) {
+            // System.out.println("未知设备: " + deviceCode);
+            return;
+        }
+
+        // 解析数据
+        // "current_power": 120 (0.1kW)
+        if (data.containsKey("current_power")) {
+            station.setPower(new java.math.BigDecimal(data.get("current_power").toString()).multiply(new java.math.BigDecimal("0.1")));
+        }
+        // "current_voltage": 400 (0.1V)
+        if (data.containsKey("current_voltage")) {
+            station.setVoltage(new java.math.BigDecimal(data.get("current_voltage").toString()).multiply(new java.math.BigDecimal("0.1")));
+        }
+        // "current_current": 300 (0.01A)
+        if (data.containsKey("current_current")) {
+            station.setCurrent(new java.math.BigDecimal(data.get("current_current").toString()).multiply(new java.math.BigDecimal("0.01")));
+        }
+        
+        // 更新状态 "onoff": 0:on, 1:idle, 2:off, 3:error
+        if (data.containsKey("onoff")) {
+            int onoff = Integer.parseInt(data.get("onoff").toString());
+            String statusStr = switch (onoff) {
+                case 0 -> "charging";
+                case 1 -> "idle";
+                case 2 -> "offline";
+                case 3 -> "error";
+                default -> "unknown";
+            };
+            station.setStatus(statusStr);
+        }
+
+        stationMapper.updateById(station);
+    }
                 throw new BusinessException("充电桩编号已被使用");
             }
         }

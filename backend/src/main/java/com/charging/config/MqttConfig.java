@@ -109,47 +109,12 @@ public class MqttConfig implements MqttCallback {
 
     private void parseStatusPayload(String deviceId, String payload) {
         try {
-            var node = objectMapper.readTree(payload);
-            
-            if (node.has("type") && !"status".equals(node.path("type").asText())) {
-                return;
-            }
-
-            int gunStatus = node.path("gun_status").asInt();
-            int errorCode = node.path("error_code").asInt();
-            
-            double currentSoc = node.path("current_soc").asDouble();
-            double currentVoltage = node.path("current_voltage").asDouble();
-            double currentCurrent = node.path("current_current").asDouble();
-            double currentPower = node.path("current_power").asDouble();
-            double chargeEnergy = node.path("charge_energy").asDouble();
-            int temp = node.path("gun_temperature").asInt();
-
-            String frontendStatus = mapDeviceStatus(gunStatus, errorCode);
-
-            log.info("Device [{}] Status Update: Status={}, SOC={}%, Volt={}V, Amp={}A, Power={}kW, Energy={}kWh, Temp={}C",
-                    deviceId, frontendStatus, currentSoc, currentVoltage, currentCurrent, currentPower, chargeEnergy, temp);
-            
-            stationService.updateStatusByCode(deviceId, frontendStatus, currentVoltage, currentCurrent, currentPower, currentSoc, chargeEnergy, temp);
-            
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, Object> data = objectMapper.readValue(payload, java.util.Map.class);
+            stationService.updateStatusFromMqtt(deviceId, data);
+            log.debug("Updated status for device: {}", deviceId);
         } catch (Exception e) {
             log.error("Failed to parse status payload from device: {}", deviceId, e);
-        }
-    }
-
-    private String mapDeviceStatus(int gunStatus, int errorCode) {
-        if (errorCode > 0) {
-            return "fault";
-        }
-        
-        switch (gunStatus) {
-            case 1:
-                return "online";
-            case 2:
-            case 3:
-                return "charging";
-            default:
-                return "offline";
         }
     }
 
