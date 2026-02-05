@@ -150,12 +150,12 @@ public class ChargingStationService {
             station.setCurrent(new java.math.BigDecimal(data.get("current_current").toString()).multiply(new java.math.BigDecimal("0.01")));
         }
         
-        // 更新状态 "onoff": 0:on, 1:idle, 2:off, 3:error
+        // 更新状态 "onoff": 0:charging, 1:online, 2:offline, 3:error
         if (data.containsKey("onoff")) {
             int onoff = Integer.parseInt(data.get("onoff").toString());
             String statusStr = switch (onoff) {
                 case 0 -> "charging";
-                case 1 -> "idle";
+                case 1 -> "online";
                 case 2 -> "offline";
                 case 3 -> "error";
                 default -> "unknown";
@@ -165,14 +165,6 @@ public class ChargingStationService {
 
         stationMapper.updateById(station);
         System.out.println("📊 更新充电桩状态: " + deviceCode + " | 功率:" + station.getPower() + "kW | 状态:" + station.getStatus());
-    }
-                throw new BusinessException("充电桩编号已被使用");
-            }
-        }
-        
-        BeanUtils.copyProperties(request, station);
-        stationMapper.updateById(station);
-        return convertToResponse(station);
     }
 
     /**

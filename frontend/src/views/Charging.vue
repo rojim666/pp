@@ -260,6 +260,15 @@
           </div>
 
           <div class="form-group">
+            <label>设备序列号/设备ID</label>
+            <input 
+              v-model="formData.serialNumber" 
+              type="text" 
+              placeholder="例如: 84:F7:03:12:34:56"
+            />
+          </div>
+
+          <div class="form-group">
             <label>安装地址 *</label>
             <input 
               v-model="formData.location" 
@@ -360,6 +369,7 @@ const formData = ref({
   id: null,
   name: '',
   code: '',
+  serialNumber: '',
   location: '',
   type: 'ac',
   power: 7,
@@ -481,6 +491,7 @@ const showAddDialog = () => {
     id: null,
     name: '',
     code: '',
+    serialNumber: '',
     location: '',
     type: 'ac',
     power: 7,

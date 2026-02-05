@@ -110,7 +110,7 @@ class DatabaseManager:
         """映射设备状态"""
         status_map = {
             0: "charging",
-            1: "idle", 
+            1: "online", 
             2: "offline",
             3: "error"
         }
