@@ -14,6 +14,7 @@ import com.charging.mapper.ChargingRecordMapper;
 import com.charging.mapper.ChargingStationMapper;
 import com.charging.mapper.TariffConfigMapper;
 import com.charging.mapper.UserMapper;
+import com.charging.config.MqttConfig;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -38,6 +39,7 @@ public class ChargingRecordService {
     private final ChargingStationMapper stationMapper;
     private final UserMapper userMapper;
     private final TariffConfigMapper tariffMapper;
+    private final MqttConfig mqttConfig;
 
     /**
      * 分页查询充电记录
@@ -87,7 +89,17 @@ public class ChargingRecordService {
         if (station == null) {
             throw new BusinessException("充电桩不存在");
         }
-        if (!"online".equals(station.getStatus())) {
+        String status = station.getStatus();
+        if ("charging".equals(status)) {
+            throw new BusinessException("充电桩正在充电");
+        }
+        if ("offline".equals(status) || "maintenance".equals(status) || "error".equals(status)) {
+            throw new BusinessException("充电桩不可用");
+        }
+        if (status != null && !status.isEmpty()
+                && !"online".equals(status)
+                && !"idle".equals(status)
+                && !"unknown".equals(status)) {
             throw new BusinessException("充电桩不可用");
         }
         
@@ -120,6 +132,9 @@ public class ChargingRecordService {
         // 更新充电桩状态
         station.setStatus("charging");
         stationMapper.updateById(station);
+
+        // 发送开启充电指令
+        sendOnOffCommand(station, 0);
         
         return convertToResponse(record);
     }
@@ -197,6 +212,9 @@ public class ChargingRecordService {
         station.setTotalRevenue(station.getTotalRevenue().add(totalFee));
         station.setStatus("online");
         stationMapper.updateById(station);
+
+        // 发送停止充电指令
+        sendOnOffCommand(station, 2);
         
         // 更新用户统计
         User user = userMapper.selectById(record.getUserId());
@@ -216,6 +234,21 @@ public class ChargingRecordService {
         userMapper.updateById(user);
         
         return convertToResponse(record);
+    }
+
+    private void sendOnOffCommand(ChargingStation station, int value) {
+        if (mqttConfig == null || station == null) {
+            return;
+        }
+        String deviceId = station.getSerialNumber();
+        if (deviceId == null || deviceId.trim().isEmpty()) {
+            deviceId = station.getCode();
+        }
+        if (deviceId == null || deviceId.trim().isEmpty()) {
+            return;
+        }
+        String payload = String.format("{\"type\":\"command\",\"name\":\"onoff\",\"value\":%d}", value);
+        mqttConfig.sendToDevice(deviceId, payload);
     }
 
     /**

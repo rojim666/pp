@@ -144,10 +144,6 @@ CREATE TABLE `system_log` (
     KEY `idx_created_at` (`created_at`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='系统日志表';
 
--- 插入默认管理员账户 (密码: admin123)
-INSERT INTO `sys_user` (`username`, `password`, `phone`, `real_name`, `role`, `balance`) 
-VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iAt6Z5EH', '13800138000', '系统管理员', 'admin', 10000.00);
-
--- 插入默认费率配置
+-- 费率配置表
 INSERT INTO `tariff_config` (`name`, `peak_price`, `valley_price`, `normal_price`, `service_fee`, `peak_hours`, `valley_hours`, `is_default`, `effective_date`, `description`)
 VALUES ('标准费率', 1.20, 0.60, 0.80, 0.80, '["08:00-12:00","18:00-22:00"]', '["00:00-06:00"]', 1, '2024-01-01', '工作日标准费率');

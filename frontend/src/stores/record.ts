@@ -39,7 +39,7 @@ export const useRecordStore = defineStore('record', () => {
     error.value = null
     try {
       const res = await recordAPI.list()
-      records.value = res.records || []
+      records.value = res?.records ?? []
     } catch (e: any) {
       error.value = e.message
       console.error('Failed to fetch records:', e)
@@ -51,7 +51,7 @@ export const useRecordStore = defineStore('record', () => {
   async function getRecordById(id: string): Promise<ChargingRecord | null> {
     try {
       const res = await recordAPI.get(id)
-      return res.data
+      return res
     } catch (e: any) {
       error.value = e.message
       return null
@@ -61,7 +61,7 @@ export const useRecordStore = defineStore('record', () => {
   async function getRecordsByUserId(userId: string): Promise<ChargingRecord[]> {
     try {
       const res = await recordAPI.list({ userId })
-      return res.data.records || res.data
+      return res?.records ?? res ?? []
     } catch (e: any) {
       error.value = e.message
       return []
@@ -71,7 +71,7 @@ export const useRecordStore = defineStore('record', () => {
   async function getRecordsByStationId(stationId: string): Promise<ChargingRecord[]> {
     try {
       const res = await recordAPI.list({ stationId })
-      return res.data.records || res.data
+      return res?.records ?? res ?? []
     } catch (e: any) {
       error.value = e.message
       return []
@@ -82,7 +82,7 @@ export const useRecordStore = defineStore('record', () => {
     loading.value = true
     try {
       const res = await recordAPI.start(record)
-      const created = res.data
+      const created = res
       records.value.unshift(created)
       return created
     } catch (e: any) {

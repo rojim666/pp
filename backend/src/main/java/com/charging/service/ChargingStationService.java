@@ -128,6 +128,7 @@ public class ChargingStationService {
                     .location("未知位置")
                     .manufacturer("未知")
                     .model("ESP32-S3")
+                    .installDate(java.time.LocalDate.now())
                     .power(java.math.BigDecimal.ZERO)
                     .voltage(java.math.BigDecimal.ZERO)
                     .current(java.math.BigDecimal.ZERO)

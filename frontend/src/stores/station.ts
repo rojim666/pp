@@ -43,7 +43,7 @@ export const useStationStore = defineStore('station', () => {
     error.value = null
     try {
       const res = await stationAPI.list()
-      stations.value = res.records || []
+      stations.value = res?.records ?? []
     } catch (e: any) {
       error.value = e.message
       console.error('Failed to fetch stations:', e)
