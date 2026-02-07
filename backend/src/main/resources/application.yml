@@ -36,7 +36,7 @@ jwt:
 
 # MQTT配置
 mqtt:
-  broker: tcp://129.204.21.66:1883
+  broker: tcp://129.204.21.66:1884
   username: charge
   password: 123456
   topic: /device/+/+

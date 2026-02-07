@@ -409,13 +409,25 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useStationStore } from '../stores/station'
 
 const stationStore = useStationStore()
 
+let pollTimer = null
+
 onMounted(() => {
   stationStore.fetchStations()
+  pollTimer = setInterval(() => {
+    stationStore.fetchStations()
+  }, 5000)
+})
+
+onUnmounted(() => {
+  if (pollTimer) {
+    clearInterval(pollTimer)
+    pollTimer = null
+  }
 })
 
 const statusText = {

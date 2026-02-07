@@ -55,14 +55,16 @@ public class MqttConfig implements MqttCallback {
      */
     public void sendToDevice(String deviceId, String payload) {
         try {
-            String targetTopic = "/device/" + deviceId + "/controll";
+            String controlTopic = "/device/" + deviceId + "/control";
+            String controllTopic = "/device/" + deviceId + "/controll";
             MqttMessage message = new MqttMessage(payload.getBytes(StandardCharsets.UTF_8));
             message.setQos(1);
             if (client != null && client.isConnected()) {
-                client.publish(targetTopic, message);
-                log.info("Sent control command to [{}]: {}", targetTopic, payload);
+                client.publish(controlTopic, message);
+                client.publish(controllTopic, message);
+                log.info("Sent control command to [{}] and [{}]: {}", controlTopic, controllTopic, payload);
             } else {
-                log.warn("MQTT client not connected, failed to send to {}", targetTopic);
+                log.warn("MQTT client not connected, failed to send to {} / {}", controlTopic, controllTopic);
             }
         } catch (MqttException e) {
             log.error("Failed to send MQTT message", e);
@@ -96,7 +98,7 @@ public class MqttConfig implements MqttCallback {
 
             if ("status".equals(msgType)) {
                 parseStatusPayload(deviceId, payload);
-            } else if ("controll".equals(msgType)) {
+            } else if ("control".equals(msgType) || "controll".equals(msgType)) {
                 log.info("Received control reply from device: {}", deviceId);
             } else {
                 log.warn("Unknown message type: {} from device: {}", msgType, deviceId);
