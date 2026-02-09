@@ -1,0 +1,67 @@
+# ==================== 通用忽略规则 ====================
+# 操作系统相关文件
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+.idea/
+.vscode/
+*.log
+*.tmp
+*.bak
+
+# ==================== 后端(Maven/Java)忽略规则 ====================
+# Maven构建产物
+backend/target/
+# Maven本地仓库缓存
+backend/.m2/
+# IDEA项目文件
+backend/*.iml
+backend/.idea/
+backend/out/
+# Eclipse项目文件
+backend/.classpath
+backend/.project
+backend/.settings/
+# Java编译产物
+backend/*.class
+# 日志文件
+backend/logs/
+backend/*.log
+# 临时文件
+backend/tmp/
+backend/temp/
+
+# ==================== 前端(Vue/Vite/Node.js)忽略规则 ====================
+# Node.js依赖包
+frontend/node_modules/
+# npm/yarn缓存
+frontend/.npm/
+frontend/.yarn/
+frontend/yarn-error.log
+# Vite构建产物和缓存
+frontend/dist/
+frontend/.vite/
+# 环境变量文件（包含敏感配置）
+frontend/.env
+frontend/.env.local
+frontend/.env.development.local
+frontend/.env.test.local
+frontend/.env.production.local
+# 前端日志/缓存
+frontend/npm-debug.log*
+frontend/yarn-debug.log*
+frontend/yarn-error.log*
+# IDE缓存
+frontend/.idea/
+frontend/.vscode/
+# 前端打包临时文件
+frontend/.pnpm-debug.log
+frontend/build/
+frontend/dist-ssr/
+frontend/*.local
+
+# ==================== Git自身忽略 ====================
+.gitattributes
+.gitignore.local
