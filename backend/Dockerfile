@@ -8,7 +8,11 @@ WORKDIR /app
 COPY backend/pom.xml .
 
 # 下载依赖（分层缓存）
-RUN mvn dependency:go-offline -B
+RUN mvn dependency:go-offline -B -U \
+    -Dmaven.repo.local=/root/.m2/repository \
+    -Dmaven.wagon.http.ssl.insecure=true \
+    -Dmaven.wagon.http.ssl.allowall=true \
+    -Dmaven.mirror.url=https://maven.aliyun.com/repository/public
 
 # 复制源代码
 COPY backend/src ./src
