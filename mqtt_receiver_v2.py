@@ -20,11 +20,13 @@ except ImportError:
     sys.exit(1)
 
 # ========== 配置 ==========
+# 您的私有服务器配置
 MQTT_BROKER = "129.204.21.66"
 MQTT_PORT = 1883
-MQTT_USERNAME = "charge"
-MQTT_PASSWORD = "123456"
-MQTT_TOPIC = "/device/+/status"
+MQTT_USERNAME = "root"
+MQTT_PASSWORD = "root1234"
+MQTT_TOPIC_STATUS = "device/+/status"
+MQTT_TOPIC_RECORD = "device/+/record"
 
 # MySQL配置 - 根据环境调整
 DB_CONFIG = {
@@ -59,6 +61,57 @@ class DatabaseManager:
                 if k != 'password':
                     print(f"   - {k}: {v}")
             return False
+
+    def save_charging_record(self, data):
+        """保存充电记录到数据库"""
+        if not self.conn:
+            return
+
+        try:
+            cursor = self.conn.cursor()
+            query_insert = """
+                INSERT INTO charging_record 
+                (station_id, station_name, user_id, user_name, user_phone, 
+                 start_time, end_time, duration, energy, start_soc, end_soc, 
+                 peak_energy, valley_energy, normal_energy, electricity_fee, service_fee, total_fee,
+                 status, payment_status, payment_method, payment_time, created_at, updated_at)
+                VALUES 
+                (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+            """
+            
+            # 提取数据，提供默认值防止报错
+            values = (
+                data.get('station_id', 0),
+                data.get('station_name', 'Unknown'),
+                data.get('user_id', 0),
+                data.get('user_name', 'Unknown'),
+                data.get('user_phone', ''),
+                data.get('start_time'),
+                data.get('end_time'),
+                data.get('duration', 0),
+                data.get('energy', 0.0),
+                data.get('start_soc', 0),
+                data.get('end_soc', 0),
+                data.get('peak_energy', 0.0),
+                data.get('valley_energy', 0.0),
+                data.get('normal_energy', 0.0),
+                data.get('electricity_fee', 0.0),
+                data.get('service_fee', 0.0),
+                data.get('total_fee', 0.0),
+                data.get('status', 'completed'),
+                data.get('payment_status', 'unpaid'),
+                data.get('payment_method', ''),
+                data.get('payment_time')
+            )
+            
+            cursor.execute(query_insert, values)
+            self.conn.commit()
+            print(f"📝 [记录] 已保存充电记录 (金额: {data.get('total_fee', 0)}元)")
+            cursor.close()
+        except Error as e:
+            print(f"❌ 保存充电记录失败: {e}")
+            if self.conn:
+                self.conn.rollback()
     
     def create_or_update_station(self, device_code, data):
         """创建或更新充电桩信息"""
@@ -96,8 +149,8 @@ class DatabaseManager:
                 query_insert = """
                     INSERT INTO charging_station 
                     (code, serial_number, name, type, status, location, manufacturer, model, 
-                     power, voltage, current, created_at, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, NOW(), NOW())
+                     power, voltage, current, install_date, created_at, updated_at)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, CURDATE(), NOW(), NOW())
                 """
                 cursor.execute(query_insert, (
                     device_code, device_code, f"充电桩-{device_short}", "DC",
@@ -137,8 +190,9 @@ def on_connect(client, userdata, flags, rc):
     msg_count = 0
     if rc == 0:
         print("✅ MQTT已连接到服务器")
-        client.subscribe(MQTT_TOPIC, qos=1)
-        print(f"📡 已订阅话题: {MQTT_TOPIC}\n")
+        # 订阅状态和记录两个话题
+        client.subscribe([(MQTT_TOPIC_STATUS, 1), (MQTT_TOPIC_RECORD, 1)])
+        print(f"📡 已订阅话题: \n   - {MQTT_TOPIC_STATUS}\n   - {MQTT_TOPIC_RECORD}\n")
     else:
         print(f"❌ 连接失败，错误代码: {rc}")
 
@@ -151,17 +205,35 @@ def on_message(client, userdata, msg):
     global msg_count
     try:
         topic_parts = msg.topic.split("/")
-        if len(topic_parts) >= 4 and topic_parts[3] == "status":
+        
+        # 兼容两种格式
+        if len(topic_parts) == 3 and topic_parts[0] == "device":
+             # 格式: device/{code}/status
+            device_code = topic_parts[1]
+            msg_type = topic_parts[2]
+        elif len(topic_parts) >= 4 and topic_parts[1] == "device":
+            # 格式: prefix/device/{code}/status
             device_code = topic_parts[2]
-            data = json.loads(msg.payload.decode())
-            msg_count += 1
-            
-            print(f"\n[{msg_count}] 📨 收到消息 时间: {msg.timestamp}")
-            if db:
+            msg_type = topic_parts[3]
+        else:
+            return
+
+        try:
+            payload_str = msg.payload.decode()
+            data = json.loads(payload_str)
+        except:
+            print(f"⚠️ 收到无效JSON数据")
+            return
+
+        msg_count += 1
+        print(f"\n[{msg_count}] 📨 收到消息 [{msg_type}]: {device_code}")
+        
+        if db:
+            if msg_type == "status":
                 db.create_or_update_station(device_code, data)
+            elif msg_type == "record":
+                db.save_charging_record(data)
     
-    except json.JSONDecodeError as e:
-        print(f"❌ JSON解析失败: {e}")
     except Exception as e:
         print(f"❌ 处理消息失败: {e}")
 
