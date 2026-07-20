@@ -16,6 +16,7 @@ import java.nio.charset.StandardCharsets;
 @Configuration
 @RequiredArgsConstructor
 public class MqttConfig implements MqttCallback {
+    @Value("${mqtt.enabled:false}") private boolean enabled;
     @Value("${mqtt.broker}") private String broker;
     @Value("${mqtt.username}") private String username;
     @Value("${mqtt.password}") private String password;
@@ -27,7 +28,13 @@ public class MqttConfig implements MqttCallback {
     private MqttClient client;
 
     @PostConstruct
-    public void connect() throws Exception {
+    public void connect() {
+        if (!enabled) {
+            // TODO: MQTT 服务恢复后，将 mqtt.enabled 设置为 true 并验证设备消息收发。
+            log.warn("MQTT is disabled; backend will start without device messaging");
+            return;
+        }
+
         try {
             client = new MqttClient(broker, clientId, new MemoryPersistence());
             var options = new MqttConnectOptions();
@@ -42,8 +49,8 @@ public class MqttConfig implements MqttCallback {
             client.subscribe(topic, 1);
             log.info("MQTT connected successfully to broker: {}, subscribed to topic: {}", broker, topic);
         } catch (MqttException e) {
-            log.error("Failed to connect to MQTT broker: {}", broker, e);
-            throw e;
+            // TODO: MQTT 服务稳定后补充带退避策略的后台重连和连接状态监控。
+            log.error("Failed to connect to MQTT broker: {}; backend will continue without MQTT", broker, e);
         }
     }
 

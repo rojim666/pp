@@ -2,6 +2,7 @@ spring:
   application:
     name: charging-station-backend
   datasource:
+    # TODO 替换username 和 password 为你的mysql账号密码
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/charging_station?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
     username: root
@@ -36,6 +37,8 @@ jwt:
 
 # MQTT配置
 mqtt:
+  # TODO: MQTT 服务恢复并完成连通性验证后，将此项改为 true。
+  enabled: ${MQTT_ENABLED:false}
   broker: tcp://129.204.21.66:1884
   username: charge
   password: 123456
